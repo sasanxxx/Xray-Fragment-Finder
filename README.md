@@ -33,7 +33,7 @@ This tool is intended to help users in regions with heavy internet filtering fin
 
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/sasanxxx/Xray-Fragment-Finder.git](https://github.com/sasanxxx/your-repo-name.git)
+    git clone https://github.com/sasanxxx/Xray-Fragment-Finder.git
     ```
 
 2.  **Navigate into the project directory:**
