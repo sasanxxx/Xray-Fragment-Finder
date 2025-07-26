@@ -12,7 +12,7 @@ This tool is intended to help users in regions with heavy internet filtering fin
 
 <img width="446" height="228" alt="Image" src="https://github.com/user-attachments/assets/2116801b-ef5d-4021-abc7-f670322f4e77" />
 
-[![Xray Fragment Tester Video](https://img.youtube.com/vi/3/maxresdefault.jpg)](https://www.youtube.com/watch?v=2l3cXpYhNAU)
+[![Xray Fragment Tester Video](https://img.youtube.com/vi/12/hqdefault.jpg)](https://youtu.be/2l3cXpYhNAU?si=coKJyRWJPl89YLpX)
 
 ## ✨ Features
 
