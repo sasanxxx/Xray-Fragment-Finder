@@ -33,13 +33,12 @@ This tool is intended to help users in regions with heavy internet filtering fin
 
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/sasanxxx/your-repo-name.git](https://github.com/sasanxxx/your-repo-name.git)
+    git clone [https://github.com/sasanxxx/Xray-Fragment-Finder.git](https://github.com/sasanxxx/your-repo-name.git)
     ```
-    *(Replace `your-repo-name` with the name you chose for your repository)*
 
 2.  **Navigate into the project directory:**
     ```bash
-    cd your-repo-name
+    cd Xray-Fragment-Finder
     ```
 
 3.  **Run the setup script:**
