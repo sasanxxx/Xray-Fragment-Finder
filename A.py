@@ -9,8 +9,8 @@ import json
 import itertools
 import requests
 import platform
-import uuid
 import csv
+from core import generate_config
 
 XRAY_PATH = "xray.exe"
 TEMP_CONFIG_FILE = "temp_config.json"
@@ -49,16 +49,6 @@ def stop_xray():
         except Exception: pass
     if platform.system() == "Windows": subprocess.run(["taskkill", "/F", "/IM", "xray.exe"], capture_output=True, check=False)
     else: subprocess.run(["killall", "-9", "xray"], capture_output=True, check=False)
-
-def generate_config(base_config: dict, params: dict) -> dict:
-    config = json.loads(json.dumps(base_config))
-    config["outbounds"][0]["settings"]["fragment"]["length"] = params["fragment_length"]
-    config["outbounds"][0]["settings"]["fragment"]["interval"] = params["fragment_interval"]
-    config["dns"]["servers"] = [params["dns_server_url"]]
-    config["outbounds"][2]["settings"]["vnext"][0]["address"] = params["server_name"]
-    config["outbounds"][2]["streamSettings"]["tlsSettings"]["serverName"] = params["server_name"]
-    config["outbounds"][2]["settings"]["vnext"][0]["users"][0]["id"] = str(uuid.uuid4())
-    return config
 
 def test_accessibility(proxy_url: str | None, websites: list) -> bool:
     proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
