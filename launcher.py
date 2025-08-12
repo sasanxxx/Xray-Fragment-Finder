@@ -9,6 +9,9 @@ import subprocess
 import os
 from core import generate_config
 
+BEST_RESULT_FILENAME = "best_result.json"
+
+# ## <-- CORRECTED: This dictionary was missing and has been added back.
 DEFAULT_PARAMS = {
     "fragment_length": "5-10, 20-40",
     "fragment_interval": "10-20, 20-30",
@@ -21,7 +24,7 @@ def get_params_from_gui(single_values=False):
     params = {}
     for key, entry in entries.items():
         value = entry.get().strip()
-        if not value: # Handle empty fields
+        if not value:
             raise ValueError(f"Field '{labels[key]}' cannot be empty.")
         if not single_values:
             params[key] = [s.strip() for s in value.split(',')]
@@ -44,10 +47,8 @@ def start_test():
     except Exception as e:
         messagebox.showerror("Error", str(e))
 
-def generate_final_config():
+def generate_config_from_params(params: dict):
     try:
-        params = get_params_from_gui(single_values=True)
-        
         base_config_filename = "Xray_Config (Fragment).json"
         with open(base_config_filename, "r", encoding='utf-8') as f:
             base_config = json.load(f)
@@ -71,9 +72,32 @@ def generate_final_config():
     except Exception as e:
         messagebox.showerror("Error", str(e))
 
+def generate_manual_config():
+    try:
+        params = get_params_from_gui(single_values=True)
+        generate_config_from_params(params)
+    except Exception as e:
+        messagebox.showerror("Error", str(e))
+
+def generate_best_config():
+    try:
+        with open(BEST_RESULT_FILENAME, 'r', encoding='utf-8') as f:
+            best_params = json.load(f)
+        
+        if "websites_to_test" not in best_params:
+             best_params["websites_to_test"] = "https://www.google.com"
+        
+        generate_config_from_params(best_params)
+
+    except FileNotFoundError:
+        messagebox.showerror("Error", f"Best result file '{BEST_RESULT_FILENAME}' not found.\nPlease run a test first.")
+    except Exception as e:
+        messagebox.showerror("Error", str(e))
+
+# --- GUI Setup ---
 window = tk.Tk()
 window.title("Xray Fragment Tester")
-window.geometry("600x300")
+window.geometry("600x320")
 window.resizable(False, False)
 
 form_frame = tk.Frame(window, padx=10, pady=10)
@@ -88,13 +112,33 @@ labels = {
     "websites_to_test": "Websites to Test"
 }
 
+try:
+    with open(BEST_RESULT_FILENAME, 'r', encoding='utf-8') as f:
+        best_params = json.load(f)
+    
+    if os.path.exists("params.json"):
+        with open("params.json", 'r', encoding='utf-8') as f:
+            last_params = json.load(f)
+        best_params["websites_to_test"] = ", ".join(last_params["websites_to_test"])
+    else:
+        best_params["websites_to_test"] = DEFAULT_PARAMS["websites_to_test"]
+except FileNotFoundError:
+    best_params = None
+
 for i, (key, text) in enumerate(labels.items()):
     label = tk.Label(form_frame, text=text, anchor="w")
     label.grid(row=i, column=0, sticky="w", padx=5, pady=5)
     
     entry = tk.Entry(form_frame, width=60)
     entry.grid(row=i, column=1, sticky="ew", padx=5, pady=5)
-    entry.insert(0, DEFAULT_PARAMS[key])
+    
+    default_value = ""
+    if best_params and key in best_params:
+        default_value = best_params[key]
+    elif key in DEFAULT_PARAMS:
+        default_value = DEFAULT_PARAMS[key]
+        
+    entry.insert(0, default_value)
     entries[key] = entry
 
 form_frame.grid_columnconfigure(1, weight=1)
@@ -103,10 +147,13 @@ button_frame = tk.Frame(window)
 button_frame.pack(pady=10)
 
 start_button = tk.Button(button_frame, text="Start Test", command=start_test, bg="#28a745", fg="white", font=("Arial", 10, "bold"), width=20)
-start_button.pack(side="left", padx=10)
+start_button.pack(side="left", padx=5)
 
-generate_button = tk.Button(button_frame, text="Generate JSON Config", command=generate_final_config, bg="#007bff", fg="white", font=("Arial", 10, "bold"), width=20)
-generate_button.pack(side="left", padx=10)
+generate_manual_button = tk.Button(button_frame, text="Generate From Fields", command=generate_manual_config, bg="#007bff", fg="white", font=("Arial", 10, "bold"), width=20)
+generate_manual_button.pack(side="left", padx=5)
+
+generate_best_button = tk.Button(button_frame, text="Generate Best Config", command=generate_best_config, bg="#ffc107", fg="black", font=("Arial", 10, "bold"), width=20)
+generate_best_button.pack(side="left", padx=5)
 
 slogan_font = font.Font(family="Consolas", size=9, slant="italic")
 slogan_label = tk.Label(window, text="...because we can!", font=slogan_font, fg="#555555")

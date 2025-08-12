@@ -17,6 +17,7 @@ TEMP_CONFIG_FILE = "temp_config.json"
 BASE_CONFIG_FILENAME = "Xray_Config (Fragment).json"
 PARAMS_FILENAME = "params.json"
 RESULTS_FILENAME = "results.csv"
+BEST_RESULT_FILENAME = "best_result.json" # <-- New file for the best result
 xray_process = None
 
 COMMON_HEADERS = {
@@ -95,6 +96,10 @@ if __name__ == "__main__":
         keys, values = zip(*PARAMETER_GRID.items())
         all_combinations = [dict(zip(keys, v)) for v in itertools.product(*values)]
         
+        # --- [NEW] Variables to track results ---
+        results_list = []
+        best_result = {"speed": 0, "latency": 99999, "params": None}
+
         file_exists = os.path.isfile(RESULTS_FILENAME)
         with open(RESULTS_FILENAME, 'a', newline='', encoding='utf-8') as csv_file:
             csv_writer = csv.writer(csv_file)
@@ -118,7 +123,17 @@ if __name__ == "__main__":
                     if is_accessible:
                         print("  -> Accessibility: SUCCESS")
                         proxy_speed, proxy_latency = measure_speed_and_latency(proxy_url=proxy_url)
+                        
+                        # --- [NEW] Logic to update best result ---
                         if proxy_speed and proxy_latency:
+                            current_result = {"params": params, "speed": proxy_speed, "latency": proxy_latency}
+                            results_list.append(current_result)
+                            
+                            # Check if this result is better than the current best
+                            if current_result["speed"] > best_result["speed"] or \
+                               (current_result["speed"] == best_result["speed"] and current_result["latency"] < best_result["latency"]):
+                                best_result = current_result
+
                             usage_str = f"({(proxy_speed/baseline_speed)*100:.1f}%)" if baseline_speed else ""
                             print(f"  -> Metrics: Speed={proxy_speed:.2f} Mbps {usage_str}, Latency={proxy_latency:.2f} ms")
                             csv_writer.writerow([timestamp, params['fragment_length'], params['fragment_interval'], params['server_name'], params['dns_server_url'], 'Success', f"{proxy_speed:.2f}", f"{proxy_latency:.2f}"])
@@ -132,8 +147,24 @@ if __name__ == "__main__":
         print("\n--- Grid Search Finished ---")
         print(f"Results have been saved to '{RESULTS_FILENAME}'")
 
+        # --- [NEW] Sort and display final results ---
+        if results_list:
+            sorted_results = sorted(results_list, key=lambda x: (-x['speed'], x['latency']))
+            print("\n🏆 All successful configurations (sorted by Speed, then Latency):")
+            for i, result in enumerate(sorted_results):
+                print(f"  {i+1}. Speed: {result['speed']:.2f} Mbps | Latency: {result['latency']:.2f} ms | Params: {result['params']}")
+            
+            # --- [NEW] Save the absolute best result to a file ---
+            if best_result["params"]:
+                with open(BEST_RESULT_FILENAME, 'w', encoding='utf-8') as f:
+                    json.dump(best_result["params"], f, indent=2)
+                print(f"\n✅ Best configuration parameters saved to '{BEST_RESULT_FILENAME}'")
+        else:
+            print("\nNo successful configurations were found.")
+
+
     except FileNotFoundError as e:
-        print(f"\nFATAL ERROR: A required file was not found: {e}. Make sure xray.exe and {BASE_CONFIG_FILENAME} are in the same folder as the script.")
+        print(f"\nFATAL ERROR: A required file was not found: {e}.")
     except Exception as e:
         print(f"\nAn unexpected error occurred: {e}")
     finally:
