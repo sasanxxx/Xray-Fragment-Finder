@@ -3,6 +3,10 @@ echo ===================================================
 echo =      Xray Fragment Tester Setup Script        =
 echo ===================================================
 
+:: --- URLs for Xray download ---
+set "PRIMARY_URL=https://github.com/XTLS/Xray-core/releases/latest/download/Xray-windows-64.zip"
+set "MIRROR_URL=https://github.com/sasanxxx/Xray-Fragment-Finder/releases/download/v1.0-assets/Xray-windows-64.zip"
+
 echo.
 echo [1/3] Installing Python libraries from requirements.txt...
 pip install -r requirements.txt
@@ -16,10 +20,20 @@ echo SUCCESS: Python libraries installed.
 
 echo.
 echo [2/3] Downloading latest Xray-core for Windows (64-bit)...
-powershell -Command "Invoke-WebRequest -Uri 'https://github.com/XTLS/Xray-core/releases/latest/download/Xray-windows-64.zip' -OutFile 'xray.zip'"
+powershell -Command "Invoke-WebRequest -Uri '%PRIMARY_URL%' -OutFile 'xray.zip'"
+
+:: --- Fallback Logic ---
 if %errorlevel% neq 0 (
     echo.
-    echo ERROR: Failed to download Xray-core. Please check your internet connection.
+    echo WARNING: Failed to download from the official link. Trying mirror...
+    powershell -Command "Invoke-WebRequest -Uri '%MIRROR_URL%' -OutFile 'xray.zip'"
+)
+
+:: --- Final Check ---
+if %errorlevel% neq 0 (
+    echo.
+    echo ERROR: Failed to download Xray-core from both official and mirror links.
+    echo Please check your internet connection or the mirror link.
     pause
     exit /b 1
 )
